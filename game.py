@@ -64,10 +64,38 @@ class GameBoard(list):
             return "Pending"
 
 
+def handle_player_turn(player: Player, board: GameBoard):
+    """Handles a single player's turn, including input and validation."""
+    while True:
+        player_input = input(f"{player.name}: ")
+        try:
+            pos_i_str, pos_j_str = player_input.split(",")
+            pos_i = int(pos_i_str)
+            pos_j = int(pos_j_str)
+
+            if not (0 <= pos_i <= 2 and 0 <= pos_j <= 2):
+                print("Invalid position. Row and column must be between 0 and 2.")
+                continue
+            if board[pos_i][pos_j] is not None:
+                print("Cell already occupied. Choose an empty cell.")
+                continue
+            
+            board[pos_i][pos_j] = player.mark
+            break  # Valid input, exit inner loop
+        except ValueError:
+            print("Invalid format. Please use row,col (e.g., 0,1).")
+
 
 def setup():
     player1_name = input("Please enter a name for Player 1: ")
     player1_mark = input(f"Please choose a mark between X and O for {player1_name}: ")
+    while True:
+        player1_mark = player1_mark.upper()
+        if player1_mark == 'X' or player1_mark == 'O':
+            break
+        else:
+            print("Invalid mark. Please choose X or O.")
+            player1_mark = input(f"Please choose a mark between X and O for {player1_name}: ")
     player2_name = input("Please enter a name for Player 2: ")
     player2_mark = "X" if player1_mark=="O" else "O"
     print(f"{player1_name} uses {player1_mark}")
@@ -83,23 +111,22 @@ def setup():
 
     print("\nChoose a position from available positions on the board.\n")
 
+    current_player = player1
     while board.status == "Pending":
-        p1_input = input(f"{player1.name}: ")
-        p1_pos_i, p1_pos_j = p1_input.split(",")
-        board[int(p1_pos_i)][int(p1_pos_j)] = player1.mark
+        handle_player_turn(current_player, board)
         print("\n")
         print(board)
         print("\n")
+
         if board.status == "Complete":
             break
-        p2_input = input(f"{player2.name}: ")
-        p2_pos_i, p2_pos_j = p2_input.split(",")
-        board[int(p2_pos_i)][int(p2_pos_j)] = player2.mark
-        print("\n")
-        print(board)
-        print("\n")
-        if board.status == "Complete":
-            break
+        
+        # Switch player
+        if current_player == player1:
+            current_player = player2
+        else:
+            current_player = player1
+            
     if board.winner:
         winner = player1.name if player1.mark == board.winner else player2.name
         print(f"Congratulations! {winner} is the winner.")
